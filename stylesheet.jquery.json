@@ -1,0 +1,28 @@
+{
+    "name": "stylesheet",
+    "version": "0.1.1",
+    "title": "jQuery StyleSheet",
+    "author": {
+        "name": "Vimal Aravindashan",
+        "url": "http://www.facebook.com/vimal.aravindashan"
+    },
+    "licenses": [
+        {
+            "type": "MIT",
+            "url": "http://opensource.org/licenses/MIT"
+        }
+    ],
+    "dependencies": {
+        "jquery": ">=1.2.2"
+    }
+    "description": "jQuery plugin for stylesheet manipulation.",
+    "keywords": [
+        "stylesheet",
+        "css",
+        "selector",
+        "selectors"
+    ],
+    "homepage": "https://github.com/f0r4y312/jquery-stylesheet",
+    "download": "https://github.com/f0r4y312/jquery-stylesheet/tags",
+    "bugs": "https://github.com/f0r4y312/jquery-stylesheet/issues"
+}
