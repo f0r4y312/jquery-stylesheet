@@ -1,6 +1,6 @@
 {
     "name": "stylesheet",
-    "version": "0.1.1",
+    "version": "0.2.0",
     "title": "jQuery StyleSheet",
     "author": {
         "name": "Vimal Aravindashan",
@@ -13,14 +13,16 @@
         }
     ],
     "dependencies": {
-        "jquery": ">=1.2.2"
+        "jquery": ">=1.4.3"
     },
     "description": "jQuery plugin for stylesheet manipulation.",
     "keywords": [
         "stylesheet",
         "css",
         "selector",
-        "selectors"
+        "selectors",
+        "rule",
+        "rules"
     ],
     "homepage": "https://github.com/f0r4y312/jquery-stylesheet",
     "download": "https://github.com/f0r4y312/jquery-stylesheet/tags",

@@ -2,7 +2,7 @@
  * jQuery plugin for the stylesheet manipulation
  * 
  * @author Vimal Aravindashan
- * @version 0.1.1
+ * @version 0.2.0
  * @licensed MIT license
  */
 (function ($) {
@@ -31,8 +31,10 @@
 	 * Vendor prefixed style property name.
 	 * Based on similar function in jQuery library.
 	 * @param {String} name camelCased CSS property name
-	 * @returns {String} Vendor specific tag @see vendorPrefixes prefixed name if found in styles @see _styles,
-	 * else passed name as-is
+	 * @returns {String} Vendor specific tag prefixed style name
+	 * if found in styles, else passed name as-is
+	 * @see vendorPrefixes
+	 * @see _styles
 	 */
 	function vendorPropName(name) {
 		var titleName = name[0].toUpperCase() + name.slice(1),
@@ -56,8 +58,8 @@
 	 * Also accepts array of property names and object of name/value pairs.
 	 * @param {String} value If defined, then value of the style property
 	 * is updated with it. Unused when name is an object map.
-	 * @returns {jQuery.stylesheet|jQuery array} A new jQuery.stylesheet object if name/value is not passed,
-	 * or a jQuery array of property value pairs
+	 * @returns {jQuery.stylesheet|String|Object} A new jQuery.stylesheet object
+	 * if name/value is not passed, or value of property or object of name/value pairs
 	 */
 	$.stylesheet = function (selector, name, value) {
 		if(!(this instanceof $.stylesheet)) {
@@ -65,7 +67,7 @@
 		}
 		
 		this.init(selector);
-		return this.style(name, value);
+		return this.css(name, value);
 	};
 	
 	$.extend($.stylesheet, {
@@ -98,6 +100,21 @@
 		},
 		
 		/**
+		 * @function jQuery.stylesheet.camelCase
+		 * jQuery.camelCase is undocumented and could be removed at any point
+		 * @param {String} hypenated string to be camelCased
+		 * @returns {String} camelCased string
+		 */
+		camelCase: $.camelCase || function( str ) {
+			return str.replace(/-([\da-z])/g, function(a){return a.toUpperCase().replace('-','');});
+		},
+		
+		/**
+		 * Normalized CSS property names
+		 */
+		cssProps: $.cssProps || {},
+		
+		/**
 		 * @function jQuery.styesheet.cssStyleName
 		 * @param {String} name Hypenated CSS property name
 		 * @returns {String} camelCased name if found in host styles, or vendor specific name
@@ -107,56 +124,30 @@
 				return name;
 			}
 			
-			var camelName = $.camelCase(name);
-			return (camelName in _styles) ?
-					camelName :
-					($.cssProps[name] || ($.cssProps[name] = vendorPropName(camelName)));
-		},
-		
-		/**
-		 * @function jQuery.stylesheet.cssComputedStyles
-		 * Compress the output of jQuery.stylesheet.style() to most applicable resultant styles
-		 * NOTE: experimental feature
-		 * @param {Array} styles Array of key/value pair objects
-		 * @returns {jQuery Object} Object map of final key/value pairs
-		 */
-		cssComputedStyles: function (styles) {
-			var computedStyles = {};
-			$(styles).each(function () {
-				$.each(this, function (key, val) {
-					if(val && val.length > 0 && !(key in computedStyles)) {
-						computedStyles[key] = val;
-					}
-				});
-			});
-			return $(computedStyles);
+			var camelcasedName = $.camelCase(name);
+			return (camelcasedName in _styles) ?
+					camelcasedName :
+					($.cssProps[name] || ($.cssProps[name] = vendorPropName(camelcasedName)));
 		}
 	});
 	
 	$.extend($.fn, {
 		/**
-		 * @function jQuery.fn.cssComputedStyles
-		 * Helper function for chainability
-		 * @returns @see jQuery.stylesheet.cssComputedStyles
-		 */
-		cssComputedStyles: function () {
-			return $.stylesheet.cssComputedStyles($(this));
-		},
-		
-		/**
 		 * @function jQuery.fn.reverse
-		 * Native Object Method Array.reverse for jQuery.
+		 * Native Object Method Array.reverse() for jQuery.
 		 * Full credits to Michael Geary (http://www.mail-archive.com/discuss@jquery.com/msg04261.html)
 		 */
-		reverse: ('reverse' in $.fn) ? $.fn.reverse : [].reverse 
+		reverse: $.fn.reverse || [].reverse 
 	});
 	
 	$.stylesheet.fn = $.stylesheet.prototype = {
 		/**
 		 * @function jQuery.stylesheet.fn.init
 		 * Initializes a jQuery.stylesheet object.
-		 * Selects a list of applicable CSS rules for given selector @see jQuery.stylesheet.cssRules
-		 * @param {String|Array|Object} selector CSS rule selector text(s) with optional stylesheet filter(s)
+		 * Selects a list of applicable CSS rules for given selector.
+		 * @see jQuery.stylesheet.cssRules
+		 * @param {String|Array|Object} selector CSS rule selector text(s)
+		 * with optional stylesheet filter(s)
 		 */
 		init: function (selector) {
 			var rules = []; /**< Array of CSSStyleRule objects matching the selector initialized with */
@@ -184,52 +175,60 @@
 			$.extend(this, {
 				/**
 				 * @function jQuery.stylesheet.rules
-				 * @returns {Array} Copy of array of CSSStyleRule objects used by this instance of jQuery.stylesheet 
+				 * @returns {Array} Copy of array of CSSStyleRule objects used
+				 * by this instance of jQuery.stylesheet 
 				 */
 				rules: function() {
 					return rules.slice();
 				},
 				
 				/**
-				 * @function jQuery.stylesheet.style()
+				 * @function jQuery.stylesheet.css()
 				 * @param {String|Array|Object} name Name of style property to get/set.
 				 * Also accepts array of property names and object of name/value pairs.
 				 * @param {String} value If defined, then value of the style property
 				 * is updated with it. Unused when name is an object map.
-				 * @returns {jQuery.stylesheet|jQuery array} A new jQuery.stylesheet object if name/value is not passed,
-				 * or a jQuery array of property value pairs
+				 * @returns {jQuery.stylesheet|String|Object} A new jQuery.stylesheet object
+				 * if name/value is not passed, or value of property or object of name/value pairs
 				 */
-				style: function (name, value) {
-					var self = this, styles = $([]);
-					
-					function addStyleDeclaration(style, prop) {
-						var decl = {};
-						decl[prop] = style[prop];
-						styles.push(decl);
-					}
+				css: function (name, value) {
+					var self = this, styles;
 					
 					switch($.type(name)) {
 					case 'string':
 						name = $.stylesheet.cssStyleName(name);
 						if(name) {
 							$.each(rules, function (i, rule) {
-								addStyleDeclaration(rule.style, name);
-								if(value !== undefined) {
-									rule.style[name] = value;
-									addStyleDeclaration(rule.style, name);
+								if(rule.style[name] !== '') {
+									if(value !== undefined) {
+										rule.style[name] = value;
+										styles = self;
+									} else {
+										styles = rule.style[name];
+									}
+									return false;
 								}
 							});
+							if(styles === undefined && value !== undefined) {
+								rules[0].style[name] = value;
+								styles = self;
+							}
 						}
 						break;
 					case 'array':
+						styles = {};
 						$.each(name, function (idx, key) {
-							$.merge(styles, self.style(key, value));
+							styles[key] = self.css(key, value);
 						});
+						if(value !== undefined) {
+							styles = self;
+						}
 						break;
 					case 'object':
 						$.each(name, function (key, val) {
-							$.merge(styles, self.style(key, val));
+							self.css(key, val);
 						});
+						styles = self;
 						break;
 					default: /*undefined, null*/
 						return self;
@@ -238,6 +237,8 @@
 					return styles;
 				}
 			});
+			/* backward compatibility */
+			this.style = this.css;
 		}
 	};
 })(jQuery);
