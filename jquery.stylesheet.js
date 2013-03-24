@@ -2,7 +2,7 @@
  * jQuery plugin for the stylesheet manipulation
  * 
  * @author Vimal Aravindashan
- * @version 0.2.0
+ * @version 0.2.1
  * @licensed MIT license
  */
 (function ($) {
@@ -89,7 +89,7 @@
 			//NOTE: selector and filter will be treated as case-sensitive
 			$(document.styleSheets).not(_elStyle).reverse().each(function (i, styleSheet) {
 				if(filterStyleSheet(styleSheetFilter, styleSheet)) {
-					$.each((styleSheet.rules || styleSheet.cssRules), function (j, cssRule) {
+					$(styleSheet.rules || styleSheet.cssRules).reverse().each(function (j, cssRule) {
 						if(cssRule instanceof CSSStyleRule && cssRule.selectorText === selector) {
 							rules.push(cssRule);
 						}
