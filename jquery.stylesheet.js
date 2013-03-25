@@ -2,7 +2,7 @@
  * jQuery plugin for the stylesheet manipulation
  * 
  * @author Vimal Aravindashan
- * @version 0.2.1
+ * @version 0.2.2
  * @licensed MIT license
  */
 (function ($) {
