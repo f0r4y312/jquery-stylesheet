@@ -100,6 +100,31 @@ and that the location for the html file is /jquery-stylesheet/.
       console.log($.stylesheet('#page {body}').rules());
       console.log($.stylesheet($.merge(
           $.stylesheet('#page {body}').rules(),
-          $.stylesheet('body.css {body}').rules()
+          $.stylesheet.cssRules('body.css {body}')
       )).rules());
+    });
+
+**The `*` filter**
+
+> A special * filter allows to select rules that may be part of grouped selectors.
+> Do keep in mind that changing properties of rules in grouped selectors
+> will also impact other selectors in the same group.
+
+    <style type="text/css">
+      .classA {
+        font-size: large;
+      }
+      .classA, .classB {
+        font-weight: bold;
+      }
+      .classB {
+        font-style: italic;
+      }
+    </style>
+    ...
+    $(document).ready(function() {
+      console.log($.stylesheet('.classA').rules());
+      console.log($.stylesheet('* {.classA}').rules());
+      console.log($.stylesheet('.classB').rules());
+      console.log($.stylesheet('* {.classB}').rules());
     });

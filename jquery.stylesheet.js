@@ -21,9 +21,30 @@
 	function filterStyleSheet(filter, styleSheet) {
 		filter = filter || '';
 		var node = $(styleSheet.ownerNode);
-		return (filter === '') ||
+		return (filter === '') || (filter === '*') ||
 			('#'+(node.prop('id') || '') == filter) ||
 			((node.prop('href') || '') == _ahref.prop('href', filter).prop('href'));
+	}
+	
+	/**
+	 * @function matchSelector
+	 * Matches given selector to selectorText of cssRule
+	 * @param {CSSStyleRule} cssRule to match with
+	 * @param {String} selector selector string to compare
+	 * @param {Boolean} matchGroups when true, selector is matched in grouped style rules
+	 */
+	function matchSelector(cssRule, selector, matchGroups) {
+		if(!(cssRule instanceof CSSStyleRule)) {
+			return false;
+		}
+		
+		if(cssRule.selectorText === selector) {
+			return true;
+		} else if (matchGroups === true) {
+			return $($.map(cssRule.selectorText.split(','), $.trim)).filter(function(i) {
+				return this.toString() === selector;
+			}).length > 0;
+		}
 	}
 	
 	/**
@@ -85,18 +106,18 @@
 			var rules = [],
 				filters = selector.split('{'),
 				styleSheetFilter = (filters.length > 1) ? $.trim(filters[0]) : '';
-			selector = (filters.length > 1) ? $.trim(filters[1].split('}')[0]) : $.trim(selector);
+			selector = $.trim((filters.length > 1) ? filters[1].split('}')[0] : selector)
+				.replace(/\s+/g, ' ')
+				.replace(/\s*,/g, ','); //TODO: add more selector validation
 			//NOTE: selector and filter will be treated as case-sensitive
-			$(document.styleSheets).not(_elStyle).reverse().each(function (i, styleSheet) {
+			$(document.styleSheets).each(function (i, styleSheet) {
 				if(filterStyleSheet(styleSheetFilter, styleSheet)) {
-					$(styleSheet.rules || styleSheet.cssRules).reverse().each(function (j, cssRule) {
-						if(cssRule instanceof CSSStyleRule && cssRule.selectorText === selector) {
-							rules.push(cssRule);
-						}
-					});
+					$.merge(rules, $(styleSheet.rules || styleSheet.cssRules).filter(function() {
+						return matchSelector(this, selector, styleSheetFilter === '*');
+					}));
 				}
 			});
-			return rules;
+			return rules.reverse();
 		},
 		
 		/**
@@ -129,15 +150,6 @@
 					camelcasedName :
 					($.cssProps[name] || ($.cssProps[name] = vendorPropName(camelcasedName)));
 		}
-	});
-	
-	$.extend($.fn, {
-		/**
-		 * @function jQuery.fn.reverse
-		 * Native Object Method Array.reverse() for jQuery.
-		 * Full credits to Michael Geary (http://www.mail-archive.com/discuss@jquery.com/msg04261.html)
-		 */
-		reverse: $.fn.reverse || [].reverse 
 	});
 	
 	$.stylesheet.fn = $.stylesheet.prototype = {
@@ -192,7 +204,7 @@
 				 * if name/value is not passed, or value of property or object of name/value pairs
 				 */
 				css: function (name, value) {
-					var self = this, styles;
+					var self = this, styles = undefined;
 					
 					switch($.type(name)) {
 					case 'string':
@@ -228,8 +240,7 @@
 						$.each(name, function (key, val) {
 							self.css(key, val);
 						});
-						styles = self;
-						break;
+						return self;
 					default: /*undefined, null*/
 						return self;
 					}
