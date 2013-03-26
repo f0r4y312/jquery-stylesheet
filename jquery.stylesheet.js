@@ -2,13 +2,15 @@
  * jQuery plugin for the stylesheet manipulation
  * 
  * @author Vimal Aravindashan
- * @version 0.2.2
+ * @version 0.2.3
  * @licensed MIT license
  */
 (function ($) {
-	var _elStyle = document.createElement('style'), /**< <style> element used as staging area for applying CSS rules */
+	var	_elStyle = $('<style type="text/css"></style>').appendTo('head'), /**< <style> element for adding new CSS rules */
 		_ahref = $(document.createElement('a')), /**< <a> tag used for evaluating hrefs */
 		_styles = _ahref.prop('style'), /**< Collection of styles available on the host */
+		_sheet = _elStyle.prop('sheet') || _elStyle.prop('styleSheet'),
+		_rules = ('rules' in _sheet) ? 'rules' : 'cssRules',
 		vendorPrefixes = ["Webkit", "O", "Moz", "ms"]; /**< Case sensitive list of vendor specific prefixes */
 	
 	/**
@@ -99,7 +101,7 @@
 		 * and pass the stylesheet filter
 		 */
 		cssRules: function (selector) {
-			if(!selector) {
+			if(!$.stylesheet.isValidSelector(selector)) {
 				return [];
 			}
 			
@@ -112,12 +114,26 @@
 			//NOTE: selector and filter will be treated as case-sensitive
 			$(document.styleSheets).each(function (i, styleSheet) {
 				if(filterStyleSheet(styleSheetFilter, styleSheet)) {
-					$.merge(rules, $(styleSheet.rules || styleSheet.cssRules).filter(function() {
+					$.merge(rules, $(styleSheet[_rules]).filter(function() {
 						return matchSelector(this, selector, styleSheetFilter === '*');
 					}));
 				}
 			});
 			return rules.reverse();
+		},
+		
+		/**
+		 * @function jQuery.stylesheet.isValidSelector
+		 * @param {String} selector selector string to be validated
+		 * @returns {Boolean} true if the selector string is valid, false otherwise
+		 */
+		isValidSelector: function (selector) {
+			if(!selector || $.type(selector) !== 'string') {
+				return false;
+			}
+			
+			//TODO: add parser for selector validation
+			return true;
 		},
 		
 		/**
