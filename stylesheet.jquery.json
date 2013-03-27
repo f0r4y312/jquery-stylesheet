@@ -1,6 +1,6 @@
 {
     "name": "stylesheet",
-    "version": "0.2.3",
+    "version": "0.3.0",
     "title": "jQuery StyleSheet",
     "author": {
         "name": "Vimal Aravindashan",
@@ -13,7 +13,7 @@
         }
     ],
     "dependencies": {
-        "jquery": ">=1.4.3"
+        "jquery": ">=1.6.1"
     },
     "description": "jQuery plugin for stylesheet manipulation.",
     "keywords": [

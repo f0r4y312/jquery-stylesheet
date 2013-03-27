@@ -23,6 +23,10 @@ Feel free to just skim the blockquotes if you're in a hurry.
 Let's first create an instance of a $.stylesheet object. $.stylesheet() is a factory function,
 so `new $.stylesheet()` and `$.stylesheet()` basically do the same thing.
 
+> If no rules exist for the selector, then a new CSS rule for this selector will be added to the page
+> when it's styles are being set.
+> New rules are added to the last `style` element introduced into the page by jQuery StyleSheet.
+
     var $ss = $.stylesheet('.page');
 
 Now let's check what the value of the `background-attachment` style is
@@ -32,14 +36,18 @@ and update it to `scroll` in case the current value is `fixed`.
        $ss.css('background-attachment', 'scroll');
     }
 
-Next, let's chain together some changes, in the different ways $.stylesheet.css() can be called as a setter.
+Next, let's chain together some changes in the different ways $.stylesheet.css() can be called as a setter.
 
     $ss.css({'margin-left': '10em', 'background-attachment': 'fixed'}) /* different styles, different values */
        .css(['padding-right', 'height'], '0px')                        /* multiple styles, same value        */
        .css('width', '100%');                                          /* single style and value             */
 
+Finally, in a moment of madness, let's remove this style rule altogether!
+
+    $ss.css(null);
+
 **Chaining**
-> Similar to jQuery.css(), the getter calls cannot be chained, only the setter calls and init() can be chained.
+> Similar to jQuery.css(), the getter calls cannot be chained, only the setter calls can be chained.
 
 **Shorthands**
 > Again, similar to jQuery.css(), shorthand style names are not supported.
@@ -78,7 +86,7 @@ These one liners can also be written as follows:
 
 ###Selector filtering
 Applying changes to rules, or reading the values, when there are multiple declarations of the same rule across
-many files, jquery.stylesheet always uses the rule that would be applied finally.
+many files, jQuery StyleSheet always uses the rule that would be applied finally.
 
 However, in some cases, it may be necessary to choose a particular CSS rule from a given `<link>` or a `<style>`.
 To do so, the selectors can be filtered by using stylesheet location or id.

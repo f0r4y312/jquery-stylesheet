@@ -2,15 +2,16 @@
  * jQuery plugin for the stylesheet manipulation
  * 
  * @author Vimal Aravindashan
- * @version 0.2.3
+ * @version 0.3.0
  * @licensed MIT license
  */
 (function ($) {
-	var	_elStyle = $('<style type="text/css"></style>').appendTo('head'), /**< <style> element for adding new CSS rules */
-		_ahref = $(document.createElement('a')), /**< <a> tag used for evaluating hrefs */
+	var	_ahref = $(document.createElement('a')), /**< <a> tag used for evaluating hrefs */
 		_styles = _ahref.prop('style'), /**< Collection of styles available on the host */
-		_sheet = _elStyle.prop('sheet') || _elStyle.prop('styleSheet'),
-		_rules = ('rules' in _sheet) ? 'rules' : 'cssRules',
+		_sheet = function(s) {
+			return s.sheet || s.styleSheet;
+		}($('<style type="text/css">* {}</style>').appendTo('head')[0]), /**< StyleSheet for adding new rules*/
+		_rules = ('rules' in _sheet) ? 'rules' : 'cssRules', /**< Attribute name for rules collection in a stylesheet */
 		vendorPrefixes = ["Webkit", "O", "Moz", "ms"]; /**< Case sensitive list of vendor specific prefixes */
 	
 	/**
@@ -69,6 +70,43 @@
 			}
 		}
 		return name;
+	}
+	
+	/**
+	 * @function insertRule
+	 * Cross-browser function for inserting rules
+	 * @param {String} selector selectorText for the rule
+	 * @param {String} css CSS property-value pair string
+	 * @param {Number} index Index position to insert the string;
+	 * defaults to end of rules collection
+	 */
+	function insertRule(selector, css, index) {
+		if(!selector || !css) {
+			return -1; //NOTE: IE does not like addRule(selector,'',index)
+		}
+		index = index || this[_rules].length;
+		return (this.insertRule) ? this.insertRule(selector+'{'+css+'}', index) : this.addRule(selector, css, index);
+	}
+	
+	/**
+	 * @function deleteRule
+	 * Cross-browser function for deleting rules
+	 * @param {Number|CSSStyleRule} Index of rule to be deleted, or
+	 * reference to rule to be deleted from rules collection
+	 */
+	function deleteRule(rule) {
+		var _delfn = this.deleteRule || this.removeRule;
+		if($.type(rule) == 'number') {
+			_delfn.call(this, rule);
+		} else {
+			var self = this;
+			$.each(this[_rules], function (i, _rule) {
+				if(rule === _rule) {
+					_delfn.call(self, i);
+					return false;
+				}
+			});
+		}
 	}
 	
 	/**
@@ -223,23 +261,41 @@
 					var self = this, styles = undefined;
 					
 					switch($.type(name)) {
+					case 'null':
+						$.each(rules, function (idx, rule) {
+							deleteRule.call(rule.parentStyleSheet, rule);
+						});
+						//NOTE: Safari seems to replace the rules collection object on insert/delete
+						//      Refresh our private collection to reflect the changes
+						rules = $.stylesheet.cssRules(selector);
+						return self;
 					case 'string':
-						name = $.stylesheet.cssStyleName(name);
-						if(name) {
-							$.each(rules, function (i, rule) {
-								if(rule.style[name] !== '') {
-									if(value !== undefined) {
-										rule.style[name] = value;
-										styles = self;
-									} else {
-										styles = rule.style[name];
-									}
-									return false;
-								}
-							});
-							if(styles === undefined && value !== undefined) {
-								rules[0].style[name] = value;
+						var stylename = $.stylesheet.cssStyleName(name);
+						if(stylename) {
+							if(rules.length === 0 && value !== undefined) {
+								insertRule.call(_sheet, selector, name+':'+(value || 0));
+								//NOTE: See above note on Safari
+								// rules = [_sheet[_rules][_sheet[_rules].length-1]] should also work here
+								// however, IE has different behaviour for grouped selectors,
+								// so it is best to refresh the whole collection
+								rules = $.stylesheet.cssRules(selector);
 								styles = self;
+							} else {
+								$.each(rules, function (i, rule) {
+									if(rule.style[stylename] !== '') {
+										if(value !== undefined) {
+											rule.style[stylename] = value;
+											styles = self;
+										} else {
+											styles = rule.style[stylename];
+										}
+										return false;
+									}
+								});
+								if(styles === undefined && value !== undefined) {
+									rules[0].style[stylename] = value;
+									styles = self;
+								}
 							}
 						}
 						break;
@@ -257,7 +313,7 @@
 							self.css(key, val);
 						});
 						return self;
-					default: /*undefined, null*/
+					default: /*undefined*/
 						return self;
 					}
 					
