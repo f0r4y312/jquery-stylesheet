@@ -1,6 +1,6 @@
 {
     "name": "stylesheet",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "title": "jQuery StyleSheet",
     "author": {
         "name": "Vimal Aravindashan",
@@ -15,10 +15,13 @@
     "dependencies": {
         "jquery": ">=1.6.1"
     },
-    "description": "jQuery plugin for stylesheet manipulation.",
+    "description": "jQuery plugin for adding, removing and making changes to CSS rules. Almost similar to the YUI StyleSheet utility.",
     "keywords": [
         "stylesheet",
-        "css"
+        "css",
+        "style",
+        "rules",
+        "yui"
     ],
     "homepage": "https://github.com/f0r4y312/jquery-stylesheet",
     "download": "https://github.com/f0r4y312/jquery-stylesheet/tags",

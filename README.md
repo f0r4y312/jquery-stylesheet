@@ -1,7 +1,7 @@
 jQuery StyleSheet
 =================
 
-jQuery.stylesheet plugin allows you to make on the fly changes to CSS rules included in a page.
+jQuery.stylesheet plugin allows you to add, remove and make changes to CSS rules on the fly.
 
 Applying a change to a CSS rule can be more efficient than looping through matching elements
 and applying the same change to each, especially if there are many elements,
@@ -23,9 +23,11 @@ Feel free to just skim the blockquotes if you're in a hurry.
 Let's first create an instance of a $.stylesheet object. $.stylesheet() is a factory function,
 so `new $.stylesheet()` and `$.stylesheet()` basically do the same thing.
 
-> If no rules exist for the selector, then a new CSS rule for this selector will be added to the page
-> when it's styles are being set.
-> New rules are added to the last `style` element introduced into the page by jQuery StyleSheet.
+> If no rules exist for the selector, then a new CSS rule for this selector will be added when it's styles are being set.
+> By default, the new rules are added to the last `style` element introduced into the page by jQuery StyleSheet.
+> [Selector filtering](#selector-filtering) can be used to override this default behaviour and the new rules will be added
+> to the filtered stylesheet. If no stylesheet matches the filter, or if there is more than one match,
+> then rules will be added to the last `style` element.
 
     var $ss = $.stylesheet('.page');
 

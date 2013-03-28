@@ -1,8 +1,8 @@
 /**
- * jQuery plugin for the stylesheet manipulation
+ * jQuery plugin for adding, removing and making changes to CSS rules
  * 
  * @author Vimal Aravindashan
- * @version 0.3.0
+ * @version 0.3.1
  * @licensed MIT license
  */
 (function ($) {
@@ -10,8 +10,8 @@
 		_styles = _ahref.prop('style'), /**< Collection of styles available on the host */
 		_sheet = function(s) {
 			return s.sheet || s.styleSheet;
-		}($('<style type="text/css">* {}</style>').appendTo('head')[0]), /**< StyleSheet for adding new rules*/
-		_rules = ('rules' in _sheet) ? 'rules' : 'cssRules', /**< Attribute name for rules collection in a stylesheet */
+		}($('<style type="text/css"> </style>').appendTo('head')[0]), /**< StyleSheet for adding new rules*/
+		_rules = ('cssRules' in _sheet) ? 'cssRules' : 'rules', /**< Attribute name for rules collection in a stylesheet */
 		vendorPrefixes = ["Webkit", "O", "Moz", "ms"]; /**< Case sensitive list of vendor specific prefixes */
 	
 	/**
@@ -19,7 +19,7 @@
 	 * Filter a stylesheet based on ID or location
 	 * @param {String} filter Filter to be applied. id or href of the style element can be used as filters.
 	 * @param {CSSStyleSheet} styleSheet StyleSheet to be filtered
-	 * @returns {Boolean} true if stylesheet matches the filter, false otherwise
+	 * @returns {Boolean} true if styleSheet matches the filter, false otherwise
 	 */
 	function filterStyleSheet(filter, styleSheet) {
 		filter = filter || '';
@@ -30,22 +30,40 @@
 	}
 	
 	/**
+	 * @function parseSelector
+	 * Splits a jQuery.stylesheet compatible selector into stylesheet filter and selector text
+	 * @param {String} selector Selector text to be parsed
+	 * @returns {Object} object with two properties 'styleSheet' and 'selectorText'
+	 */
+	function parseSelector(selector) {
+		var styleSheet = (/.*?{/.exec(selector) || ['{'])[0],
+			selectorText = (/{.*}/g.exec(selector) || ['{'+selector+'}'])[0];
+		return {
+			styleSheet: $.trim(styleSheet.substr(0, styleSheet.length-1)),
+			selectorText: $.trim(selectorText.substr(1, selectorText.length-2)) //TODO: add more selector validation
+				.replace(/\s+/g, ' ') // compress whitespaces to a single space
+				.replace(/\s*,/g, ',') // remove whitespaces before a comma
+		};
+	}
+	
+	/**
 	 * @function matchSelector
 	 * Matches given selector to selectorText of cssRule
 	 * @param {CSSStyleRule} cssRule to match with
-	 * @param {String} selector selector string to compare
+	 * @param {String} selectorText selector string to compare
 	 * @param {Boolean} matchGroups when true, selector is matched in grouped style rules
+	 * @returns true if selectorText of cssRule matches given selector, false otherwise
 	 */
-	function matchSelector(cssRule, selector, matchGroups) {
-		if(!(cssRule instanceof CSSStyleRule)) {
+	function matchSelector(cssRule, selectorText, matchGroups) {
+		if($.type(cssRule.selectorText) !== 'string') {
 			return false;
 		}
 		
-		if(cssRule.selectorText === selector) {
+		if(cssRule.selectorText === selectorText) {
 			return true;
 		} else if (matchGroups === true) {
 			return $($.map(cssRule.selectorText.split(','), $.trim)).filter(function(i) {
-				return this.toString() === selector;
+				return this.toString() === selectorText;
 			}).length > 0;
 		}
 	}
@@ -84,8 +102,17 @@
 		if(!selector || !css) {
 			return -1; //NOTE: IE does not like addRule(selector,'',index)
 		}
+		var self = this,
+			_insfn = self.insertRule ? function (selector, css, index) { this.insertRule(selector+'{'+css+'}', index); } : self.addRule;
 		index = index || this[_rules].length;
-		return (this.insertRule) ? this.insertRule(selector+'{'+css+'}', index) : this.addRule(selector, css, index);
+		try {
+			return _insfn.call(self, selector, css, index);
+		} catch(e) {
+			$.each(selector.split(','), function(i, sel) {
+				_insfn.call(self, $.trim(sel), css);
+			});
+			return -1;
+		}
 	}
 	
 	/**
@@ -95,12 +122,24 @@
 	 * reference to rule to be deleted from rules collection
 	 */
 	function deleteRule(rule) {
-		var _delfn = this.deleteRule || this.removeRule;
+		if(!rule) {
+			return;
+		}
+		var self = this,
+			_delfn = self.deleteRule || self.removeRule;
+		if(!_delfn) { //NOTE: IE7 has issues with rule.parentStyleSheet, so we need to search for the parent stylesheet
+			$(document.styleSheets).each(function (i, styleSheet) {
+				if($(styleSheet[_rules]).filter(function() {return this === rule;}).length == 1) {
+					self = styleSheet;
+					_delfn = self.deleteRule || self.removeRule;
+					return false;
+				}
+			});
+		}
 		if($.type(rule) == 'number') {
-			_delfn.call(this, rule);
+			_delfn.call(self, rule);
 		} else {
-			var self = this;
-			$.each(this[_rules], function (i, _rule) {
+			$.each(self[_rules], function (i, _rule) {
 				if(rule === _rule) {
 					_delfn.call(self, i);
 					return false;
@@ -144,16 +183,12 @@
 			}
 			
 			var rules = [],
-				filters = selector.split('{'),
-				styleSheetFilter = (filters.length > 1) ? $.trim(filters[0]) : '';
-			selector = $.trim((filters.length > 1) ? filters[1].split('}')[0] : selector)
-				.replace(/\s+/g, ' ')
-				.replace(/\s*,/g, ','); //TODO: add more selector validation
+				filters = parseSelector(selector);
 			//NOTE: selector and filter will be treated as case-sensitive
 			$(document.styleSheets).each(function (i, styleSheet) {
-				if(filterStyleSheet(styleSheetFilter, styleSheet)) {
+				if(filterStyleSheet(filters.styleSheet, styleSheet)) {
 					$.merge(rules, $(styleSheet[_rules]).filter(function() {
-						return matchSelector(this, selector, styleSheetFilter === '*');
+						return matchSelector(this, filters.selectorText, filters.styleSheet === '*');
 					}));
 				}
 			});
@@ -186,23 +221,24 @@
 		
 		/**
 		 * Normalized CSS property names
+		 * jQuery.cssProps is undocumented and could be removed at any point
 		 */
 		cssProps: $.cssProps || {},
 		
 		/**
 		 * @function jQuery.styesheet.cssStyleName
 		 * @param {String} name Hypenated CSS property name
-		 * @returns {String} camelCased name if found in host styles, or vendor specific name
+		 * @returns {String} camelCased or vendor specific name if found in host styles
 		 */
 		cssStyleName: function (name) {
-			if(!name) {
-				return name;
+			if(name) {
+				var camelcasedName = $.camelCase(name);
+				if(camelcasedName in _styles) {
+					return camelcasedName;
+				} else if (($.cssProps[name] || ($.cssProps[name] = vendorPropName(camelcasedName))) in _styles) {
+					return $.cssProps[name];
+				}
 			}
-			
-			var camelcasedName = $.camelCase(name);
-			return (camelcasedName in _styles) ?
-					camelcasedName :
-					($.cssProps[name] || ($.cssProps[name] = vendorPropName(camelcasedName)));
 		}
 	});
 	
@@ -273,7 +309,12 @@
 						var stylename = $.stylesheet.cssStyleName(name);
 						if(stylename) {
 							if(rules.length === 0 && value !== undefined) {
-								insertRule.call(_sheet, selector, name+':'+(value || 0));
+								var filters = parseSelector(selector),
+									sheet = $(document.styleSheets).filter(function () {
+										return filterStyleSheet(filters.styleSheet, this);
+									});
+								sheet = (sheet && sheet.length == 1) ? sheet[0] : _sheet;
+								insertRule.call(sheet, filters.selectorText, name+':'+value+';');
 								//NOTE: See above note on Safari
 								// rules = [_sheet[_rules][_sheet[_rules].length-1]] should also work here
 								// however, IE has different behaviour for grouped selectors,
@@ -320,8 +361,6 @@
 					return styles;
 				}
 			});
-			/* backward compatibility */
-			this.style = this.css;
 		}
 	};
 })(jQuery);
