@@ -2,7 +2,7 @@
  * jQuery plugin for adding, removing and making changes to CSS rules
  * 
  * @author Vimal Aravindashan
- * @version 0.3.1
+ * @version 0.3.2
  * @licensed MIT license
  */
 (function ($) {
@@ -23,7 +23,7 @@
 	 */
 	function filterStyleSheet(filter, styleSheet) {
 		filter = filter || '';
-		var node = $(styleSheet.ownerNode);
+		var node = $(styleSheet.ownerNode || styleSheet.owningElement);
 		return (filter === '') || (filter === '*') ||
 			('#'+(node.prop('id') || '') == filter) ||
 			((node.prop('href') || '') == _ahref.prop('href', filter).prop('href'));
@@ -65,6 +65,8 @@
 			return $($.map(cssRule.selectorText.split(','), $.trim)).filter(function(i) {
 				return this.toString() === selectorText;
 			}).length > 0;
+		} else {
+			return false;
 		}
 	}
 	
