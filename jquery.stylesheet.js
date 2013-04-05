@@ -2,7 +2,7 @@
  * jQuery plugin for adding, removing and making changes to CSS rules
  * 
  * @author Vimal Aravindashan
- * @version 0.3.2
+ * @version 0.3.3
  * @licensed MIT license
  */
 (function ($) {
@@ -10,7 +10,7 @@
 		_styles = _ahref.prop('style'), /**< Collection of styles available on the host */
 		_sheet = function(s) {
 			return s.sheet || s.styleSheet;
-		}($('<style type="text/css"> </style>').appendTo('head')[0]), /**< StyleSheet for adding new rules*/
+		}($('<style type="text/css">*{}</style>').appendTo('head')[0]), /**< StyleSheet for adding new rules*/
 		_rules = ('cssRules' in _sheet) ? 'cssRules' : 'rules', /**< Attribute name for rules collection in a stylesheet */
 		vendorPrefixes = ["Webkit", "O", "Moz", "ms"]; /**< Case sensitive list of vendor specific prefixes */
 	
@@ -40,10 +40,26 @@
 			selectorText = (/{.*}/g.exec(selector) || ['{'+selector+'}'])[0];
 		return {
 			styleSheet: $.trim(styleSheet.substr(0, styleSheet.length-1)),
-			selectorText: $.trim(selectorText.substr(1, selectorText.length-2)) //TODO: add more selector validation
-				.replace(/\s+/g, ' ') // compress whitespaces to a single space
-				.replace(/\s*,/g, ',') // remove whitespaces before a comma
+			selectorText: normalizeSelector(selectorText.substr(1, selectorText.length-2))
 		};
+	}
+	
+	/**
+	 * @function normalizeSelector
+	 * Normalizes selectorText to work cross-browser
+	 * @param {String} selectorText selector string to normalize
+	 * @returns {String} normalized selector string
+	 */
+	function normalizeSelector(selectorText) {
+		var selector = [], last, len;
+		last = _sheet[_rules].length;
+		insertRule.call(_sheet, selectorText, ';'); //NOTE: IE doesn't seem to mind ';' as non-empty
+		len = _sheet[_rules].length;
+		for(var i=len-1; i>=last; i--) {
+			selector.push(_sheet[_rules][i].selectorText);
+			deleteRule.call(_sheet, i);
+		}
+		return selector.reverse().join(', ');
 	}
 	
 	/**
@@ -93,6 +109,32 @@
 	}
 	
 	/**
+	 * @function normalizeRule
+	 * Normalizes the CSSStyleRule object to work better across browsers
+	 * @param {CSSStyleRule} rule CSSStyleRule object to be normalized
+	 * @param {StyleSheet} styleSheet parent stylesheet of the rule
+	 * @returns {CSSStyleRule} normalized CSSStyleRule
+	 */
+	function normalizeRule(rule, styleSheet) {
+		//NOTE: this is experimental, however, it does have it's benefits
+		//TODO: add more hacks for compatibility with jQuery.animate()
+		rule.parentStyleSheet = rule.parentStyleSheet || styleSheet; //XXX: Fix for IE7
+		return rule;
+	}
+	/*
+	 * Checking for 'instanceof CSSStyleRule' fails on IE7 but not in IE8, however, the call to normalizeRule() fails on both.
+	 * So, we will define our custom CSSStyleRule class on all browsers where normalizeRule() fails.
+	 */
+	try {
+		normalizeRule(_sheet[_rules][0], _sheet);
+	} catch(e) {
+		CSSStyleRule = function(rule) {
+			$.extend(this, rule);
+			this.rule = rule; //XXX: deleteRule() requires the original object
+		};
+	}
+	
+	/**
 	 * @function insertRule
 	 * Cross-browser function for inserting rules
 	 * @param {String} selector selectorText for the rule
@@ -124,6 +166,8 @@
 	 * reference to rule to be deleted from rules collection
 	 */
 	function deleteRule(rule) {
+		//NOTE: If we are using our custom CSSStyleRule, then CSSStyleRule.rule is the real style rule object
+		rule = (rule && rule.rule) ? rule.rule : rule;
 		if(!rule) {
 			return;
 		}
@@ -180,35 +224,25 @@
 		 * and pass the stylesheet filter
 		 */
 		cssRules: function (selector) {
-			if(!$.stylesheet.isValidSelector(selector)) {
-				return [];
-			}
-			
 			var rules = [],
 				filters = parseSelector(selector);
-			//NOTE: selector and filter will be treated as case-sensitive
+			//NOTE: The stylesheet filter will be treated as case-sensitive
+			//      The selectorText filter's case depends on the browser
 			$(document.styleSheets).each(function (i, styleSheet) {
 				if(filterStyleSheet(filters.styleSheet, styleSheet)) {
 					$.merge(rules, $(styleSheet[_rules]).filter(function() {
 						return matchSelector(this, filters.selectorText, filters.styleSheet === '*');
+					}).map(function() {
+						var self = this;
+						try { //NOTE: IE8 seems to think 'this' is an 'instanceof CSSStyleRule'
+							return normalizeRule(self, styleSheet);
+						} catch(e) {
+							return normalizeRule(new CSSStyleRule(self), styleSheet);
+						}
 					}));
 				}
 			});
 			return rules.reverse();
-		},
-		
-		/**
-		 * @function jQuery.stylesheet.isValidSelector
-		 * @param {String} selector selector string to be validated
-		 * @returns {Boolean} true if the selector string is valid, false otherwise
-		 */
-		isValidSelector: function (selector) {
-			if(!selector || $.type(selector) !== 'string') {
-				return false;
-			}
-			
-			//TODO: add parser for selector validation
-			return true;
 		},
 		
 		/**
