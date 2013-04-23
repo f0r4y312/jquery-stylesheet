@@ -2,7 +2,7 @@
  * jQuery plugin for adding, removing and making changes to CSS rules
  * 
  * @author Vimal Aravindashan
- * @version 0.3.3
+ * @version 0.3.4
  * @licensed MIT license
  */
 (function ($) {
@@ -37,7 +37,13 @@
 	 */
 	function parseSelector(selector) {
 		var styleSheet = (/.*?{/.exec(selector) || ['{'])[0],
-			selectorText = (/{.*}/g.exec(selector) || ['{'+selector+'}'])[0];
+			selectorText = /{.*}/g.exec(selector); //TODO: replace selector with dict object
+		if(selectorText === null) {
+			var parts = selector.split('{');
+			selectorText = '{'+parts[parts.length==1 ? 0 : 1].split('}')[0]+'}';
+		} else {
+			selectorText = selectorText[0];
+		}
 		return {
 			styleSheet: $.trim(styleSheet.substr(0, styleSheet.length-1)),
 			selectorText: normalizeSelector(selectorText.substr(1, selectorText.length-2))
@@ -127,10 +133,13 @@
 	 */
 	try {
 		normalizeRule(_sheet[_rules][0], _sheet);
+		$.support.nativeCSSStyleRule = true;
 	} catch(e) {
+		$.support.nativeCSSStyleRule = false;
 		CSSStyleRule = function(rule) {
 			$.extend(this, rule);
 			this.rule = rule; //XXX: deleteRule() requires the original object
+			this.currentStyle = rule.style; //XXX: Hack for jQuery's curCSS()/getStyles() for IE7
 		};
 	}
 	
@@ -248,7 +257,7 @@
 		/**
 		 * @function jQuery.stylesheet.camelCase
 		 * jQuery.camelCase is undocumented and could be removed at any point
-		 * @param {String} hypenated string to be camelCased
+		 * @param {String} str Hypenated string to be camelCased
 		 * @returns {String} camelCased string
 		 */
 		camelCase: $.camelCase || function( str ) {
@@ -352,9 +361,7 @@
 								sheet = (sheet && sheet.length == 1) ? sheet[0] : _sheet;
 								insertRule.call(sheet, filters.selectorText, name+':'+value+';');
 								//NOTE: See above note on Safari
-								// rules = [_sheet[_rules][_sheet[_rules].length-1]] should also work here
-								// however, IE has different behaviour for grouped selectors,
-								// so it is best to refresh the whole collection
+								//      Also, IE has different behaviour for grouped selectors 
 								rules = $.stylesheet.cssRules(selector);
 								styles = self;
 							} else {
