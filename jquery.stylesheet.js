@@ -2,7 +2,7 @@
  * jQuery plugin for adding, removing and making changes to CSS rules
  * 
  * @author Vimal Aravindashan
- * @version 0.3.4
+ * @version 0.3.5
  * @licensed MIT license
  */
 (function ($) {
@@ -123,12 +123,17 @@
 	 */
 	function normalizeRule(rule, styleSheet) {
 		//NOTE: this is experimental, however, it does have it's benefits
-		//TODO: add more hacks for compatibility with jQuery.animate()
+		//      for use with $.animate(), be sure to include jquery.stylesheet-animate.js as well
+		//TODO: move some of the defaults used here to user options
+		rule.ownerDocument = rule.ownerDocument || document; //XXX: Hack for jQuery.isHidden()
+		rule.nodeType = rule.nodeType || 1; //XXX: Hack for jQuery's defaultPrefilter()
+		rule.nodeName = rule.nodeName || 'DIV'; //XXX: Hack for jQuery's acceptData()
+		rule.parentNode = rule.parentNode || styleSheet.ownerNode || styleSheet.owningElement; //XXX: Hack for jQuery.contains()
 		rule.parentStyleSheet = rule.parentStyleSheet || styleSheet; //XXX: Fix for IE7
 		return rule;
 	}
 	/*
-	 * Checking for 'instanceof CSSStyleRule' fails on IE7 but not in IE8, however, the call to normalizeRule() fails on both.
+	 * Checking for 'instanceof CSSStyleRule' fails in IE7 but not in IE8, however, the call to normalizeRule() fails in both.
 	 * So, we will define our custom CSSStyleRule class on all browsers where normalizeRule() fails.
 	 */
 	try {
@@ -242,12 +247,7 @@
 					$.merge(rules, $(styleSheet[_rules]).filter(function() {
 						return matchSelector(this, filters.selectorText, filters.styleSheet === '*');
 					}).map(function() {
-						var self = this;
-						try { //NOTE: IE8 seems to think 'this' is an 'instanceof CSSStyleRule'
-							return normalizeRule(self, styleSheet);
-						} catch(e) {
-							return normalizeRule(new CSSStyleRule(self), styleSheet);
-						}
+						return normalizeRule($.support.nativeCSSStyleRule ? this : new CSSStyleRule(this), styleSheet);
 					}));
 				}
 			});
