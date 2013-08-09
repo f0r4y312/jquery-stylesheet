@@ -2,7 +2,7 @@
  * jQuery plugin for adding, removing and making changes to CSS rules
  * 
  * @author Vimal Aravindashan
- * @version 0.3.5
+ * @version 0.3.6
  * @licensed MIT license
  */
 (function ($) {
@@ -16,17 +16,25 @@
 	
 	/**
 	 * @function filterStyleSheet
-	 * Filter a stylesheet based on ID or location
+	 * Filter a stylesheet based on accessibility and, ID or location
 	 * @param {String} filter Filter to be applied. id or href of the style element can be used as filters.
 	 * @param {CSSStyleSheet} styleSheet StyleSheet to be filtered
 	 * @returns {Boolean} true if styleSheet matches the filter, false otherwise
 	 */
 	function filterStyleSheet(filter, styleSheet) {
-		filter = filter || '';
-		var node = $(styleSheet.ownerNode || styleSheet.owningElement);
-		return (filter === '') || (filter === '*') ||
-			('#'+(node.prop('id') || '') == filter) ||
-			((node.prop('href') || '') == _ahref.prop('href', filter).prop('href'));
+		try {
+			if(styleSheet[_rules]) {
+				filter = filter || '';
+				var node = $(styleSheet.ownerNode || styleSheet.owningElement);
+				return (filter === '') || (filter === '*') ||
+					('#'+(node.prop('id') || '') == filter) ||
+					((node.prop('href') || '') == _ahref.prop('href', filter).prop('href'));
+			} else {
+				return false;
+			}
+		} catch(e) {
+			return false;
+		}
 	}
 	
 	/**
