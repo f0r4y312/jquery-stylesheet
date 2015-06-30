@@ -9,8 +9,8 @@ or if the change triggers multiple expensive paint operations. It can also be us
 applied style classes and then customized the elements with inline styles that you do not wish to
 override.
 
-Usage
------
+Usage (Browser)
+---------------
 
 Include the `jquery.stylesheet.js` javascript as below,
 
@@ -21,6 +21,15 @@ or in your minified package, or in one of the many ways available to include a j
 > If you intend to use the CSSStyleRule object(s) returned by the `rules()` function with jQuery's animate(),
 > please be sure to include the `jquery.stylesheet-animate.js` javascript as well.
 > Support for animate() is currently experimental and has so far been tested with only a few properties (more coming soon).
+
+Usage (CommonJS)
+----------------
+
+Require and initilaize `jquery-stylesheet` as below,
+
+    var $ = require('jquery');
+    var jquery-stylesheet = require('jquery-stylesheet');
+    jquery-stylesheet($);
 
 ###Basics
 We'll walkthrough a simple example to go through the basic usage of jQuery StyleSheet.
