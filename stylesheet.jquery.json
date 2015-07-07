@@ -1,11 +1,15 @@
 {
     "name": "stylesheet",
-    "version": "0.3.6",
+    "version": "0.3.7",
     "title": "jQuery StyleSheet",
     "author": {
         "name": "Vimal Aravindashan",
-        "url": "http://www.facebook.com/vimal.aravindashan"
+        "email": "vimal.aravindashan@gmail.com"
     },
+    "maintainers": [{
+        "name": "Darby Chang",
+        "email": "darby.chang@gmail.com"
+    }],
     "licenses": [
         {
             "type": "MIT",

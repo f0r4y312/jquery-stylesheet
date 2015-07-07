@@ -12,6 +12,8 @@ override.
 Usage
 -----
 
+**Browser**
+
 Include the `jquery.stylesheet.js` javascript as below,
 
     <script type="text/javascript" src="jquery.stylesheet.js"></script>
@@ -22,7 +24,17 @@ or in your minified package, or in one of the many ways available to include a j
 > please be sure to include the `jquery.stylesheet-animate.js` javascript as well.
 > Support for animate() is currently experimental and has so far been tested with only a few properties (more coming soon).
 
-###Basics
+**CommonJS**
+
+Require and initilaize `jquery-stylesheet` as below,
+
+    var $ = require('jquery');
+    var jquery_stylesheet = require('jquery-stylesheet');
+    jquery_stylesheet($);
+
+Basics
+------
+
 We'll walkthrough a simple example to go through the basic usage of jQuery StyleSheet.
 Feel free to just skim the blockquotes if you're in a hurry.
 
@@ -92,7 +104,9 @@ These one liners can also be written as follows:
     $.stylesheet('div.note').css(['margin-left', 'height'], '0px');
     $.stylesheet('div.title').css({'margin-left': '10em', 'background-attachment': 'fixed'});
 
-###Selector filtering
+Selector filtering
+------------------
+
 Applying changes to rules, or reading the values, when there are multiple declarations of the same rule across
 many files, jQuery StyleSheet always uses the rule that would be applied finally.
 

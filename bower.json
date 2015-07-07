@@ -1,6 +1,6 @@
 {
   "name": "jquery-stylesheet",
-  "version": "0.3.5",
+  "version": "0.3.7",
   "description": "jQuery plugin for adding, removing and making changes to CSS rules. Almost similar to the YUI StyleSheet utility.",
   "keywords": [
     "stylesheet",
@@ -27,8 +27,7 @@
   "license": "MIT",
   "authors": [{
     "name": "Vimal Aravindashan",
-    "email": "vimal.aravindashan@gmail.com",
-    "homepage": "http://www.facebook.com/vimal.aravindashan"
+    "email": "vimal.aravindashan@gmail.com"
   }],
   "homepage": "https://github.com/f0r4y312/jquery-stylesheet"
 }

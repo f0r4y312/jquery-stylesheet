@@ -2,10 +2,18 @@
  * jQuery plugin for adding, removing and making changes to CSS rules
  * 
  * @author Vimal Aravindashan
- * @version 0.3.6
+ * @version 0.3.7
  * @licensed MIT license
  */
-(function ($) {
+(function (factory) {
+	if (typeof module === "object" && typeof module.exports === "object") {
+		// Node/CommonJS
+		module.exports = factory;
+	} else {
+		// Browser globals
+		factory(jQuery);
+	}
+}(function ($) {
 	var	_ahref = $(document.createElement('a')), /**< <a> tag used for evaluating hrefs */
 		_styles = _ahref.prop('style'), /**< Collection of styles available on the host */
 		_sheet = function(s) {
@@ -414,4 +422,5 @@
 			});
 		}
 	};
-})(jQuery);
+}));
+// vi:sw=2:ts=2
