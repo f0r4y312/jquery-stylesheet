@@ -2,7 +2,7 @@
  * jQuery plugin for adding, removing and making changes to CSS rules
  * 
  * @author Vimal Aravindashan
- * @version 0.3.6
+ * @version 0.3.7
  * @licensed MIT license
  */
 (function (factory) {

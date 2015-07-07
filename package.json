@@ -1,6 +1,6 @@
 {
   "name": "jquery-stylesheet",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "jQuery.stylesheet plugin allows you to add, remove and make changes to CSS rules on the fly.",
   "main": "jquery.stylesheet.js",
   "scripts": {
@@ -8,16 +8,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/darbychang/jquery-stylesheet.git"
+    "url": "git+https://github.com/f0r4y312/jquery-stylesheet.git"
   },
-  "author": "Vimal Aravindashan",
+  "author": {
+    "name": "Vimal Aravindashan",
+    "email": "vimal.aravindashan@gmail.com"
+  },
   "contributors": [{
     "name": "Darby Chang",
     "email": "darby.chang@gmail.com"
   }],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/darbychang/jquery-stylesheet/issues"
+    "url": "https://github.com/f0r4y312/jquery-stylesheet/issues"
   },
-  "homepage": "https://github.com/darbychang/jquery-stylesheet#readme"
+  "homepage": "https://github.com/f0r4y312/jquery-stylesheet"
 }

@@ -9,8 +9,10 @@ or if the change triggers multiple expensive paint operations. It can also be us
 applied style classes and then customized the elements with inline styles that you do not wish to
 override.
 
-Usage (Browser)
----------------
+Usage
+-----
+
+**Browser**
 
 Include the `jquery.stylesheet.js` javascript as below,
 
@@ -22,16 +24,17 @@ or in your minified package, or in one of the many ways available to include a j
 > please be sure to include the `jquery.stylesheet-animate.js` javascript as well.
 > Support for animate() is currently experimental and has so far been tested with only a few properties (more coming soon).
 
-Usage (CommonJS)
-----------------
+**CommonJS**
 
 Require and initilaize `jquery-stylesheet` as below,
 
     var $ = require('jquery');
-    var jquery-stylesheet = require('jquery-stylesheet');
-    jquery-stylesheet($);
+    var jquery_stylesheet = require('jquery-stylesheet');
+    jquery_stylesheet($);
 
-###Basics
+Basics
+------
+
 We'll walkthrough a simple example to go through the basic usage of jQuery StyleSheet.
 Feel free to just skim the blockquotes if you're in a hurry.
 
@@ -101,7 +104,9 @@ These one liners can also be written as follows:
     $.stylesheet('div.note').css(['margin-left', 'height'], '0px');
     $.stylesheet('div.title').css({'margin-left': '10em', 'background-attachment': 'fixed'});
 
-###Selector filtering
+Selector filtering
+------------------
+
 Applying changes to rules, or reading the values, when there are multiple declarations of the same rule across
 many files, jQuery StyleSheet always uses the rule that would be applied finally.
 
